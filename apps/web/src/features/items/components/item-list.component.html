@@ -1,0 +1,50 @@
+<section class="items">
+  <div class="panel-heading">
+    <h2>آیتم‌های لیست</h2>
+    <span>{{ items().length | fa }} مورد</span>
+  </div>
+  <div
+    cdkDropList
+    [cdkDropListData]="items()"
+    [cdkDropListDisabled]="busy() || readonly() || !reorderEnabled()"
+    (cdkDropListDropped)="drop($event)"
+  >
+    @for (item of items(); track item.id; let index = $index) {
+      <div
+        cdkDrag
+        [cdkDragData]="item"
+        [cdkDragStartDelay]="{ touch: 180, mouse: 0 }"
+      >
+        <app-item-row
+          [item]="item"
+          [listType]="listType()"
+          [busy]="busy()"
+          [readonly]="readonly()"
+          [first]="index === 0"
+          [last]="index === items().length - 1"
+          [reorderEnabled]="reorderEnabled()"
+          (updated)="updated.emit({ item, body: $event })"
+          (details)="details.emit(item)"
+          (removed)="removed.emit(item)"
+          (moved)="reordered.emit({ from: index, to: index + $event })"
+        >
+          @if (!readonly()) {
+            <span
+              dragHandle
+              cdkDragHandle
+              class="drag-handle"
+              aria-hidden="true"
+              title="برای جابه‌جایی بکش"
+              >⠿</span
+            >
+          }
+        </app-item-row>
+      </div>
+    } @empty {
+      <app-empty-state
+        title="آیتمی برای نمایش نیست."
+        description="آیتم جدید اضافه کن یا جست‌وجو و فیلتر را تغییر بده."
+      />
+    }
+  </div>
+</section>

@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+const base=process.env.TEST_API_URL;if(!base)throw new Error('Set TEST_API_URL to an isolated test API.');
+let checks=0;let cookie='';
+async function req(path,method='GET',body,status=200){const r=await fetch(base+path,{method,headers:{'Content-Type':'application/json',Cookie:cookie},body:body===undefined?undefined:JSON.stringify(body)});const data=await r.json();assert.equal(r.status,status,method+' '+path+' '+JSON.stringify(data));checks++;if(r.headers.has('set-cookie'))cookie=r.headers.get('set-cookie').split(';')[0];return data;}
+await req('/auth/register','POST',{username:'types_'+Date.now().toString(36),password:'TypesTest123!'},201);
+await req('/lists','POST',{title:'Invalid',type:'UNKNOWN'},400);
+const task=await req('/lists','POST',{title:'Tasks',type:'TASK'},201);
+const shop=await req('/lists','POST',{title:'Groceries',type:'SHOPPING'},201);
+const simple=await req('/lists','POST',{title:'Simple',type:'SIMPLE'},201);
+const ti='/lists/'+task.id+'/items',si='/lists/'+shop.id+'/items',pi='/lists/'+simple.id+'/items';
+await req(ti,'POST',{title:'Work',notes:'Task details',priority:'HIGH',dueDate:'2026-12-31'},201);
+await req(ti,'POST',{title:'Wrong fields',quantity:2},400);
+const item=await req(si,'POST',{title:'Apples',quantity:1.25,unit:'کیلوگرم',estimatedPrice:3.45},201);assert.equal(item.quantity,'1.25');assert.equal(item.estimatedPrice,'3.45');assert.equal(item.unit,'کیلوگرم');
+for(const body of [{quantity:0},{quantity:-1},{quantity:1.0001},{quantity:null},{quantity:1000000000},{unit:' '},{estimatedPrice:-1},{estimatedPrice:1.234},{estimatedPrice:10000000000},{priority:'HIGH'},{notes:'hidden'},{dueDate:null}])await req(si,'POST',{title:'Invalid',...body},400);
+const quick=await req(si,'POST',{title:'Quick'},201);assert.equal(quick.quantity,'1');assert.equal(quick.unit,'عدد');assert.equal(quick.estimatedPrice,null);
+await req(si+'/'+item.id,'PATCH',{quantity:2.5,estimatedPrice:0});let loaded=await req('/lists/'+shop.id);assert.equal(loaded.items[0].quantity,'2.5');assert.equal(loaded.items[0].estimatedPrice,'0');
+await req(si+'/'+item.id,'PATCH',{estimatedPrice:null});await req(si+'/'+item.id,'DELETE');await req(si+'/'+item.id+'/restore','POST',{},201);loaded=await req('/lists/'+shop.id);assert.equal(loaded.items[0].quantity,'2.5');assert.equal(loaded.items[0].unit,'کیلوگرم');assert.equal(loaded.items[0].estimatedPrice,null);
+const plain=await req(pi,'POST',{title:'Plain'},201);assert.equal(plain.quantity,null);await req(pi+'/'+plain.id,'PATCH',{title:'Renamed',completed:true});
+for(const body of [{notes:'x'},{priority:'NORMAL'},{dueDate:'2026-12-31'},{quantity:1},{unit:'عدد'},{estimatedPrice:0}])await req(pi+'/'+plain.id,'PATCH',body,400);
+await req('/lists/'+simple.id,'PATCH',{type:'TASK'},400);
+await req('/lists/'+shop.id,'PATCH',{title:'Shopping renamed',description:'Updated'});assert.equal((await req('/lists/'+shop.id)).type,'SHOPPING');
+const summaries=await req('/lists');assert.deepEqual(new Set(summaries.map(l=>l.type)),new Set(['TASK','SHOPPING','SIMPLE']));
+console.log('PASS '+checks+' list-type API checks: type validation, decimal persistence, defaults, boundaries, field isolation, immutable type, undo and metadata editing');

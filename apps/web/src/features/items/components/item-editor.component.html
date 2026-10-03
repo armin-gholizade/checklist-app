@@ -1,0 +1,120 @@
+<app-dialog
+  [title]="
+    listType() === 'SHOPPING'
+      ? initial()
+        ? 'ویرایش قلم خرید'
+        : 'قلم خرید جدید'
+      : initial()
+        ? 'جزئیات آیتم'
+        : 'آیتم جدید'
+  "
+  [busy]="busy()"
+  (closed)="cancelled.emit()"
+  ><form #form="ngForm" (ngSubmit)="submit()">
+    <fieldset [disabled]="busy()">
+      <label for="item-title">عنوان</label
+      ><input
+        id="item-title"
+        name="title"
+        [(ngModel)]="title"
+        maxlength="240"
+        required
+        autofocus
+      />
+      @if (listType() === "TASK") {
+        <label for="item-notes">یادداشت <small>اختیاری</small></label
+        ><textarea
+          id="item-notes"
+          name="notes"
+          [(ngModel)]="notes"
+          maxlength="4000"
+          rows="3"
+        ></textarea>
+        <div class="form-grid">
+          <div>
+            <label for="item-priority">اولویت</label
+            ><select id="item-priority" name="priority" [(ngModel)]="priority">
+              <option value="LOW">کم</option>
+              <option value="NORMAL">معمولی</option>
+              <option value="HIGH">مهم</option>
+            </select>
+          </div>
+          <div>
+            <label for="item-date">موعد انجام <small>میلادی</small></label
+            ><input
+              id="item-date"
+              name="date"
+              type="date"
+              [(ngModel)]="dueDate"
+              min="0001-01-01"
+              max="9999-12-31"
+            />
+          </div>
+        </div>
+      } @else if (listType() === "SHOPPING") {
+        <div class="form-grid">
+          <div>
+            <label for="item-quantity">تعداد / مقدار</label
+            ><input
+              id="item-quantity"
+              name="quantity"
+              type="number"
+              inputmode="decimal"
+              [(ngModel)]="quantity"
+              required
+              min="0.001"
+              max="999999999.999"
+              step="0.001"
+            /><small class="field-hint">بیشتر از صفر، حداکثر ۳ رقم اعشار</small>
+          </div>
+          <div>
+            <label for="item-unit">واحد</label
+            ><input
+              id="item-unit"
+              name="unit"
+              list="shopping-units"
+              [(ngModel)]="unit"
+              required
+              maxlength="30"
+              placeholder="مثلاً کیلوگرم"
+            /><datalist id="shopping-units">
+              @for (u of units; track u) {
+                <option [value]="u"></option>
+              }
+            </datalist>
+          </div>
+        </div>
+        <label for="item-price"
+          >قیمت تخمینی هر واحد <small>اختیاری</small></label
+        ><input
+          id="item-price"
+          name="price"
+          type="number"
+          inputmode="decimal"
+          [(ngModel)]="estimatedPrice"
+          min="0"
+          max="9999999999.99"
+          step="0.01"
+          placeholder="مثلاً ۴٫۵۰"
+        /><small class="field-hint"
+          >حداکثر ۲ رقم اعشار؛ قیمت‌ها را با واحد پول یکسان وارد کن.</small
+        >
+      }
+      <app-feedback [error]="error()" />
+      <div class="modal-actions">
+        <button
+          class="primary"
+          [disabled]="
+            form.invalid ||
+            !title.trim() ||
+            (listType() === 'SHOPPING' && !shoppingValid())
+          "
+        >
+          {{ busy() ? "در حال ذخیره…" : "ذخیره آیتم" }}</button
+        ><button type="button" class="secondary" (click)="cancelled.emit()">
+          انصراف
+        </button>
+      </div>
+    </fieldset>
+  </form></app-dialog
+>

@@ -1,0 +1,52 @@
+<app-header />
+<main class="auth-main">
+  <div class="auth-layout">
+    <section class="auth-story">
+      <span class="eyebrow light">لیست من / فضای شخصی تو</span>
+      <h2>ذهنت را خلوت کن.<br /><span>از یک لیست شروع کن.</span></h2>
+      <p>از خریدهای روزمره تا کارهای مهم؛ هر چیزی جای خودش را دارد.</p>
+      <div class="story-divider"></div>
+      <div class="story-detail">
+        <span class="number">۰۱</span>
+        <div>
+          <strong>بساز. مرتب کن. انجام بده.</strong>
+          <p>لیست‌ها و آیتم‌های تو، همیشه در دسترس خودت.</p>
+        </div>
+      </div>
+      <div class="story-foot">
+        <span>قدم‌های کوچک، روزهای بهتر</span><span aria-hidden="true">↖</span>
+      </div>
+    </section>
+    <section class="auth-card">
+      <span class="section-label">{{
+        mode === "login" ? "خوش برگشتی" : "یک شروع تازه"
+      }}</span>
+      <h1 tabindex="-1">
+        {{ mode === "login" ? "ورود به حساب" : "حسابت را بساز" }}
+      </h1>
+      <p class="muted">
+        {{
+          mode === "login"
+            ? "لیست‌هایت منتظرت هستند."
+            : "فقط یک نام کاربری و رمز عبور لازم داری."
+        }}
+      </p>
+      <app-auth-form
+        [mode]="mode"
+        [busy]="task.busy()"
+        [error]="task.error()"
+        (submitted)="submit($event)"
+      />
+      <div class="auth-switch">
+        {{ mode === "login" ? "هنوز حساب نداری؟" : "قبلاً حساب ساخته‌ای؟"
+        }}<button
+          class="text-button"
+          [routerLink]="mode === 'login' ? '/auth/register' : '/auth/login'"
+          [disabled]="task.busy()"
+        >
+          {{ mode === "login" ? "ایجاد حساب کاربری" : "ورود به حساب" }}
+        </button>
+      </div>
+    </section>
+  </div>
+</main>

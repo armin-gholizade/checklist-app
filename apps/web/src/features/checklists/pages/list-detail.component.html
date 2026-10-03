@@ -1,0 +1,120 @@
+<a class="back text-button" routerLink="/lists">→ بازگشت به لیست‌ها</a
+><app-feedback
+  [loading]="!store.list() && task.busy()"
+  [error]="listEditing() || itemEditing() || deleting() ? '' : task.error()"
+/>
+@if (!store.list() && !task.busy()) {
+  <button class="secondary" (click)="retry()">تلاش دوباره</button>
+}
+@if (store.list(); as list) {
+  <div class="page-heading">
+    <div>
+      <span class="section-label">لیست‌های من / جزئیات</span>
+      <h1>{{ list.title }}</h1>
+      <span class="list-type-badge" [attr.data-type]="list.type">{{
+        typeLabels[list.type]
+      }}</span>
+      @if (list.description) {
+        <p class="description">{{ list.description }}</p>
+      }
+    </div>
+    <div class="heading-actions">
+      <button
+        class="secondary"
+        [disabled]="task.busy()"
+        (click)="listEditing.set(true); task.error.set('')"
+      >
+        ویرایش لیست</button
+      ><button class="secondary" [disabled]="task.busy()" (click)="archive()">
+        {{ list.archived ? "خروج از آرشیو" : "آرشیو لیست" }}
+      </button>
+    </div>
+  </div>
+  @if (list.archived) {
+    <p class="archive-banner">
+      این لیست آرشیو شده است. برای تغییر آیتم‌ها، آن را از آرشیو خارج کن.
+    </p>
+  }
+  <app-list-progress [items]="list.items" />
+  @if (!list.archived) {
+    <form class="add-row" (ngSubmit)="quickAdd()">
+      <input
+        id="quick-add"
+        name="title"
+        [(ngModel)]="newTitle"
+        required
+        maxlength="240"
+        placeholder="یک کار یا قلم جدید بنویس…"
+        aria-label="آیتم جدید"
+        [disabled]="task.busy()"
+      /><button class="primary" [disabled]="task.busy() || !newTitle.trim()">
+        افزودن آیتم
+      </button>
+      @if (list.type !== "SIMPLE") {
+        <button
+          type="button"
+          class="secondary"
+          [disabled]="task.busy()"
+          (click)="itemEditing.set({ item: null }); task.error.set('')"
+        >
+          {{ list.type === "SHOPPING" ? "قلم با مقدار و قیمت" : "با جزئیات" }}
+        </button>
+      }
+    </form>
+  }
+  <app-item-toolbar
+    [query]="query()"
+    [filter]="filter()"
+    (queryChange)="query.set($event)"
+    (filterChange)="filter.set($event)"
+  />
+  @if (!canReorder() && !list.archived) {
+    <p class="muted reorder-hint">
+      برای تغییر ترتیب، جست‌وجو را پاک کن و فیلتر «همه» را انتخاب کن.
+    </p>
+  }
+  <app-item-list
+    [items]="visible()"
+    [listType]="list.type"
+    [busy]="task.busy()"
+    [readonly]="list.archived"
+    [reorderEnabled]="canReorder()"
+    (updated)="update($event)"
+    (details)="itemEditing.set({ item: $event }); task.error.set('')"
+    (removed)="deleting.set($event); task.error.set('')"
+    (reordered)="reorder($event)"
+  />
+  @if (listEditing()) {
+    <app-list-editor
+      [initial]="list"
+      [busy]="task.busy()"
+      [error]="task.error()"
+      (saved)="saveList($event)"
+      (cancelled)="listEditing.set(false); task.error.set('')"
+    />
+  }
+  @if (itemEditing(); as editor) {
+    <app-item-editor
+      [initial]="editor.item"
+      [listType]="list.type"
+      [busy]="task.busy()"
+      [error]="task.error()"
+      (saved)="saveItem($event)"
+      (cancelled)="itemEditing.set(null); task.error.set('')"
+    />
+  }
+  @if (deleting(); as item) {
+    <app-confirm-dialog
+      title="آیتم حذف شود؟"
+      [message]="
+        '«' +
+        item.title +
+        '» حذف می‌شود. از اعلان بازگردانی می‌توانی آن را برگردانی.'
+      "
+      [busy]="task.busy()"
+      [error]="task.error()"
+      (confirmed)="remove()"
+      (cancelled)="deleting.set(null); task.error.set('')"
+    />
+  }
+}

@@ -1,0 +1,86 @@
+<div class="page-heading">
+  <div>
+    <span class="section-label">فضای شخصی تو</span>
+    <h1>{{ archived ? "آرشیو لیست‌ها" : "لیست‌های من" }}</h1>
+    <p class="muted">
+      {{
+        archived
+          ? "لیست‌های کنارگذاشته‌شده؛ هر زمان خواستی برگردان."
+          : "کارها و چیزهایی که نباید از قلم بیفتند."
+      }}
+    </p>
+  </div>
+  @if (!archived) {
+    <button class="primary" [disabled]="task.busy()" (click)="edit(null)">
+      ＋ لیست جدید
+    </button>
+  }
+</div>
+<app-feedback
+  [loading]="!loaded() && task.busy()"
+  [error]="editor() || deleting() ? '' : task.error()"
+/>
+@if (!loaded() && !task.busy()) {
+  <button class="secondary" (click)="load()">تلاش دوباره</button>
+}
+@if (loaded()) {
+  <app-list-stats [lists]="section()" />
+  <div class="toolbar">
+    <input
+      type="search"
+      aria-label="جست‌وجوی لیست‌ها"
+      placeholder="جست‌وجو در نام و توضیحات لیست‌ها…"
+      [ngModel]="query()"
+      (ngModelChange)="query.set($event)"
+    />
+  </div>
+  @if (visible().length) {
+    <app-list-table
+      [lists]="visible()"
+      [busy]="task.busy()"
+      (edited)="edit($event)"
+      (removed)="deleting.set($event); task.error.set('')"
+      (archived)="archive($event)"
+    />
+  } @else {
+    <app-empty-state
+      [title]="
+        query()
+          ? 'لیستی پیدا نشد.'
+          : archived
+            ? 'آرشیو هنوز خالی است.'
+            : 'جای اولین لیستت اینجاست.'
+      "
+      [description]="
+        query() ? 'عبارت جست‌وجو را تغییر بده.' : 'با یک نام کوتاه شروع کن.'
+      "
+    >
+      @if (!archived && !query()) {
+        <button class="primary" (click)="edit(null)">ساخت اولین لیست</button>
+      }
+    </app-empty-state>
+  }
+}
+@if (editor(); as e) {
+  <app-list-editor
+    [initial]="e.list"
+    [busy]="task.busy()"
+    [error]="task.error()"
+    (saved)="save($event)"
+    (cancelled)="editor.set(null); task.error.set('')"
+  />
+}
+@if (deleting(); as list) {
+  <app-confirm-dialog
+    title="لیست حذف شود؟"
+    [message]="
+      '«' +
+      list.title +
+      '» از لیست‌ها حذف می‌شود. از اعلان بازگردانی می‌توانی آن را برگردانی.'
+    "
+    [busy]="task.busy()"
+    [error]="task.error()"
+    (confirmed)="remove()"
+    (cancelled)="deleting.set(null); task.error.set('')"
+  />
+}

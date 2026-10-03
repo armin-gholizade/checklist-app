@@ -1,0 +1,89 @@
+<form #authForm="ngForm" (ngSubmit)="submit()">
+  <fieldset [disabled]="busy()">
+    <label for="username">نام کاربری</label
+    ><input
+      id="username"
+      name="username"
+      [(ngModel)]="username"
+      required
+      minlength="3"
+      maxlength="40"
+      pattern="[a-zA-Z0-9_.\-]+"
+      autocomplete="username"
+      dir="ltr"
+      placeholder="your.username"
+      aria-describedby="username-hint"
+    /><small id="username-hint" class="field-hint"
+      >۳ تا ۴۰ حرف انگلیسی، عدد، نقطه، خط تیره یا زیرخط</small
+    >
+    <div class="label-row">
+      <label for="password">رمز عبور</label><span>حداقل ۸ کاراکتر</span>
+    </div>
+    <div class="password-field">
+      <input
+        id="password"
+        name="password"
+        [type]="showPassword ? 'text' : 'password'"
+        [(ngModel)]="password"
+        required
+        minlength="8"
+        maxlength="128"
+        [autocomplete]="
+          mode() === 'login' ? 'current-password' : 'new-password'
+        "
+        dir="ltr"
+        placeholder="••••••••"
+      /><button
+        type="button"
+        class="reveal"
+        [attr.aria-pressed]="showPassword"
+        (click)="showPassword = !showPassword"
+      >
+        {{ showPassword ? "پنهان" : "نمایش" }}
+      </button>
+    </div>
+    @if (mode() === "register") {
+      <label for="confirm-password">تکرار رمز عبور</label
+      ><input
+        id="confirm-password"
+        name="confirmPassword"
+        [type]="showPassword ? 'text' : 'password'"
+        [(ngModel)]="confirmPassword"
+        required
+        minlength="8"
+        maxlength="128"
+        autocomplete="new-password"
+        dir="ltr"
+        placeholder="••••••••"
+        [attr.aria-invalid]="
+          confirmPassword && password !== confirmPassword ? true : null
+        "
+      />
+      @if (confirmPassword && password !== confirmPassword) {
+        <small class="field-error">رمزها هنوز یکسان نیستند.</small>
+      }
+    }
+    @if (error()) {
+      <div class="error" role="alert">{{ error() }}</div>
+    }
+    <button
+      class="primary full"
+      [disabled]="
+        busy() ||
+        authForm.invalid ||
+        (mode() === 'register' && password !== confirmPassword)
+      "
+    >
+      @if (busy()) {
+        <span class="spinner"></span>
+      }
+      {{
+        busy()
+          ? "لطفاً صبر کن…"
+          : mode() === "login"
+            ? "ورود به لیست‌ها"
+            : "ایجاد حساب کاربری"
+      }}<span aria-hidden="true">←</span>
+    </button>
+  </fieldset>
+</form>

@@ -1,0 +1,85 @@
+<section class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>نام و توضیحات</th>
+        <th>پیشرفت</th>
+        <th>وضعیت</th>
+        <th>عملیات</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (list of lists(); track list.id) {
+        <tr>
+          <td>
+            <a class="list-link" [routerLink]="['/lists', list.id]"
+              ><span class="list-icon">☷</span
+              ><span
+                >{{ list.title
+                }}<span class="list-type-badge" [attr.data-type]="list.type">{{
+                  typeLabels[list.type]
+                }}</span
+                ><small>{{ list.items.length | fa }} آیتم</small></span
+              ></a
+            >
+            @if (list.description) {
+              <p class="list-description muted">{{ list.description }}</p>
+            }
+          </td>
+          <td>
+            <div class="table-progress">
+              <span>{{ count(list) | fa }} از {{ list.items.length | fa }}</span
+              ><progress
+                [value]="count(list)"
+                [max]="list.items.length || 1"
+                [attr.aria-label]="'پیشرفت ' + list.title"
+              ></progress>
+            </div>
+          </td>
+          <td>
+            <span
+              class="status"
+              [class.complete]="
+                list.items.length && count(list) === list.items.length
+              "
+              >{{
+                list.archived
+                  ? "آرشیو"
+                  : !list.items.length
+                    ? "بدون آیتم"
+                    : count(list) === list.items.length
+                      ? "تکمیل شده"
+                      : "در حال انجام"
+              }}</span
+            >
+          </td>
+          <td>
+            <div class="row-actions">
+              <button
+                class="quiet"
+                [disabled]="busy()"
+                (click)="edited.emit(list)"
+                [attr.aria-label]="'ویرایش ' + list.title"
+              >
+                ویرایش</button
+              ><button
+                class="quiet"
+                [disabled]="busy()"
+                (click)="archived.emit(list)"
+              >
+                {{ list.archived ? "بازگرداندن" : "آرشیو" }}</button
+              ><button
+                class="quiet danger"
+                [disabled]="busy()"
+                (click)="removed.emit(list)"
+                [attr.aria-label]="'حذف ' + list.title"
+              >
+                حذف
+              </button>
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</section>

@@ -1,0 +1,50 @@
+<app-dialog
+  [title]="initial() ? 'ویرایش لیست' : 'یک لیست تازه'"
+  [busy]="busy()"
+  (closed)="cancelled.emit()"
+  ><form #form="ngForm" (ngSubmit)="submit()">
+    <fieldset [disabled]="busy()">
+      @if (!initial()) {
+        <app-list-type-picker
+          [value]="type"
+          (valueChange)="type = $event"
+          [disabled]="busy()"
+        />
+      }
+      <p class="field-hint">
+        {{
+          initial()
+            ? "نوع لیست: " +
+              typeLabels[type] +
+              " — نوع لیست پس از ساخت ثابت است."
+            : "نوع لیست بعد از ساخت ثابت است؛ نوع مناسب را انتخاب کن."
+        }}
+      </p>
+      <label for="list-title">نام لیست</label
+      ><input
+        id="list-title"
+        name="title"
+        [(ngModel)]="title"
+        required
+        maxlength="120"
+        autofocus
+      /><label for="list-description">توضیحات لیست <small>اختیاری</small></label
+      ><textarea
+        id="list-description"
+        name="description"
+        [(ngModel)]="description"
+        maxlength="2000"
+        rows="3"
+        placeholder="هدف این لیست چیست؟"
+      ></textarea
+      ><app-feedback [error]="error()" />
+      <div class="modal-actions">
+        <button class="primary" [disabled]="form.invalid || !title.trim()">
+          {{ busy() ? "در حال ذخیره…" : "ذخیره لیست" }}</button
+        ><button class="secondary" type="button" (click)="cancelled.emit()">
+          انصراف
+        </button>
+      </div>
+    </fieldset>
+  </form></app-dialog
+>

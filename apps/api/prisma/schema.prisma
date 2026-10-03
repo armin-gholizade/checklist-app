@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+model User {
+  id String @id @default(uuid())
+  username String @unique
+  passwordHash String
+  lists Checklist[]
+}
+model Checklist {
+  id String @id @default(uuid())
+  title String @db.VarChar(120)
+  description String @default("") @db.VarChar(2000)
+  type ListType @default(TASK)
+  archived Boolean @default(false)
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  ownerId String
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  items Item[]
+  @@index([ownerId])
+}
+model Item {
+  id String @id @default(uuid())
+  title String @db.VarChar(240)
+  completed Boolean @default(false)
+  notes String @default("") @db.VarChar(4000)
+  quantity Decimal? @db.Decimal(12, 3)
+  unit String? @db.VarChar(30)
+  estimatedPrice Decimal? @db.Decimal(12, 2)
+  priority Priority @default(NORMAL)
+  dueDate String? @db.VarChar(10)
+  position Int @default(0)
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  listId String
+  list Checklist @relation(fields: [listId], references: [id], onDelete: Cascade)
+  @@index([listId])
+}
+
+enum Priority {
+ LOW
+ NORMAL
+ HIGH
+}
+
+enum ListType {
+ TASK
+ SHOPPING
+ SIMPLE
+}

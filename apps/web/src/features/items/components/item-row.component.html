@@ -1,0 +1,106 @@
+<div class="item" [class.done]="item().completed">
+  <ng-content select="[dragHandle]" /><input
+    type="checkbox"
+    [checked]="item().completed"
+    [disabled]="busy() || readonly()"
+    [attr.aria-label]="'انجام شدن ' + item().title"
+    (change)="updated.emit({ completed: !item().completed })"
+  />
+  <div class="item-body">
+    @if (editing()) {
+      <form class="inline-edit" (ngSubmit)="save()">
+        <input
+          [id]="'quick-' + item().id"
+          name="title"
+          [(ngModel)]="draft"
+          required
+          maxlength="240"
+          aria-label="ویرایش سریع عنوان"
+          (keydown.escape)="editing.set(false)"
+          [disabled]="busy()"
+        /><button class="text-button" [disabled]="busy() || !draft.trim()">
+          ذخیره</button
+        ><button type="button" class="quiet" (click)="editing.set(false)">
+          انصراف
+        </button>
+      </form>
+    } @else {
+      <button
+        class="item-title title-edit"
+        [disabled]="readonly() || busy()"
+        [attr.aria-label]="'ویرایش سریع ' + item().title"
+        (click)="start()"
+      >
+        {{ item().title }}
+      </button>
+    }
+    @if (listType() === "TASK") {
+      @if (item().notes) {
+        <p class="item-notes">{{ item().notes }}</p>
+      }
+      <div class="item-meta">
+        <span
+          class="priority"
+          [class.high]="item().priority === 'HIGH'"
+          [class.low]="item().priority === 'LOW'"
+          >{{ labels[item().priority] }}</span
+        >
+        @if (item().dueDate; as date) {
+          <span [class.overdue]="overdue()"
+            >{{ overdue() ? "عقب‌افتاده · " : "" }}{{ dateLabel(date) }}</span
+          >
+        }
+      </div>
+    } @else if (listType() === "SHOPPING") {
+      <div class="item-meta shopping-meta">
+        <span
+          >{{ number(item().quantity ?? "1") }} {{ item().unit ?? "عدد" }}</span
+        >
+        @if (item().estimatedPrice !== null) {
+          <span>قیمت هر واحد: {{ number(item().estimatedPrice!) }}</span>
+        } @else {
+          <span class="muted">قیمت مشخص نشده</span>
+        }
+      </div>
+    }
+  </div>
+  <div class="row-actions">
+    @if (!readonly()) {
+      <div class="move-buttons">
+        <button
+          class="quiet"
+          [disabled]="busy() || !reorderEnabled() || first()"
+          (click)="moved.emit(-1)"
+          [attr.aria-label]="'انتقال ' + item().title + ' به بالا'"
+        >
+          ↑</button
+        ><button
+          class="quiet"
+          [disabled]="busy() || !reorderEnabled() || last()"
+          (click)="moved.emit(1)"
+          [attr.aria-label]="'انتقال ' + item().title + ' به پایین'"
+        >
+          ↓
+        </button>
+      </div>
+      @if (listType() !== "SIMPLE") {
+        <button
+          class="quiet"
+          (click)="details.emit()"
+          [disabled]="busy()"
+          [attr.aria-label]="'جزئیات ' + item().title"
+        >
+          {{ listType() === "SHOPPING" ? "ویرایش خرید" : "جزئیات" }}
+        </button>
+      }
+      <button
+        class="quiet danger"
+        (click)="removed.emit()"
+        [disabled]="busy()"
+        [attr.aria-label]="'حذف ' + item().title"
+      >
+        حذف
+      </button>
+    }
+  </div>
+</div>
